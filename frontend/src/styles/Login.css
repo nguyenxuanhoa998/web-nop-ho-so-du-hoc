@@ -1,0 +1,318 @@
+/* RESET */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* VARIABLES */
+:root {
+    --bg: #F5F6F8;
+    --card: #FFFFFF;
+
+    --primary: #3B6EF5;
+    --primary-dark: #2B5CE0;
+    --primary-glow: rgba(59,110,245,0.18);
+
+    --text-head: #0D1117;
+    --text-body: #4B5563;
+    --text-muted: #9CA3AF;
+
+    --border: #E8EBF0;
+    --border-focus: #3B6EF5;
+
+    --input-bg: #FAFBFC;
+    --tab-inactive: #EEF0F4;
+
+    --shadow-card:
+            0 2px 4px rgba(0,0,0,.04),
+            0 8px 24px rgba(0,0,0,.06),
+            0 24px 48px rgba(0,0,0,.04);
+
+    --shadow-btn:
+            0 2px 8px rgba(59,110,245,.35),
+            0 1px 2px rgba(59,110,245,.2);
+
+    --radius-card: 18px;
+    --radius-input: 12px;
+    --radius-btn: 12px;
+}
+
+/* BODY */
+body {
+    height: 100%;
+    background: var(--bg);
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text-body);
+}
+
+/* BACKGROUND GRID */
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+
+    background-image:
+            radial-gradient(circle,#CBD5E1 1px,transparent 1px);
+
+    background-size: 28px 28px;
+    opacity: .38;
+}
+
+/* PAGE */
+.page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* NAVBAR */
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 18px 40px;
+}
+
+.nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.nav-logo {
+    width: 34px;
+    height: 34px;
+
+    border-radius: 9px;
+
+    background: var(--primary);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nav-brand-text {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-head);
+}
+
+.nav-links {
+    display: flex;
+    gap: 28px;
+}
+
+.nav-links a {
+    font-size: 13px;
+    color: var(--text-body);
+    text-decoration: none;
+}
+
+.nav-links a:hover {
+    color: var(--primary);
+}
+
+/* MAIN */
+main {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+/* CARD */
+.card {
+    width: 100%;
+    max-width: 420px;
+
+    background: var(--card);
+
+    border-radius: var(--radius-card);
+
+    padding: 36px;
+
+    box-shadow: var(--shadow-card);
+}
+
+/* CARD HEADER */
+.card-head {
+    text-align: center;
+    margin-bottom: 26px;
+}
+
+.card-title {
+    font-size: 26px;
+    font-weight: bold;
+
+    color: var(--text-head);
+
+    margin-bottom: 8px;
+}
+
+.card-subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+/* TABS */
+.tabs {
+    display: flex;
+
+    background: var(--tab-inactive);
+
+    border-radius: 10px;
+
+    padding: 4px;
+
+    margin-bottom: 24px;
+}
+
+.tab {
+    flex: 1;
+
+    padding: 10px;
+
+    border: none;
+
+    border-radius: 7px;
+
+    background: transparent;
+
+    cursor: pointer;
+
+    font-size: 13px;
+
+    color: var(--text-muted);
+}
+
+.tab--active {
+    background: var(--primary);
+
+    color: white;
+
+    font-weight: 600;
+}
+
+/* FORM */
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.field label {
+    font-size: 13px;
+    font-weight: 600;
+
+    color: var(--text-head);
+}
+
+.field input {
+    height: 44px;
+
+    padding: 0 14px;
+
+    border: 1.5px solid var(--border);
+
+    border-radius: var(--radius-input);
+
+    background: var(--input-bg);
+}
+
+.field input:focus {
+    border-color: var(--border-focus);
+}
+
+/* EXTRA OPTIONS */
+.extras {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.checkbox-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.link {
+    font-size: 13px;
+    font-weight: 600;
+
+    color: var(--primary);
+
+    text-decoration: none;
+}
+
+/* BUTTON */
+.btn-primary {
+    width: 100%;
+
+    height: 46px;
+
+    background: var(--primary);
+
+    border: none;
+
+    border-radius: var(--radius-btn);
+
+    color: white;
+
+    font-size: 15px;
+
+    font-weight: 700;
+
+    cursor: pointer;
+
+    margin-top: 6px;
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+}
+
+/* FOOTER */
+.card-foot {
+    margin-top: 22px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    gap: 16px;
+}
+
+.register-line {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.divider {
+    width: 100%;
+    height: 1px;
+    background: var(--border);
+}
+
+.ssl-badge {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+footer {
+    text-align: center;
+
+    padding-bottom: 28px;
+
+    font-size: 12px;
+
+    color: var(--text-muted);
+}
