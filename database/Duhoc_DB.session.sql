@@ -1,0 +1,43 @@
+CREATE DATABASE IF NOT EXISTS du_hoc_db;
+USE du_hoc_db;
+DROP TABLE IF EXISTS student_documents;
+DROP TABLE IF EXISTS students;
+
+CREATE TABLE IF NOT EXISTS users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    full_name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    role ENUM('student', 'admin') NOT NULL DEFAULT 'student',
+    password_salt VARCHAR(64) NOT NULL,
+    password_hash VARCHAR(128) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS student_profiles (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL UNIQUE,
+    first_name VARCHAR(100) DEFAULT '',
+    last_name VARCHAR(100) DEFAULT '',
+    email VARCHAR(255) DEFAULT '',
+    phone VARCHAR(30) DEFAULT '',
+    birthday VARCHAR(50) DEFAULT '',
+    nationality VARCHAR(100) DEFAULT '',
+    current_level VARCHAR(150) DEFAULT '',
+    target_label VARCHAR(255) DEFAULT '',
+    address VARCHAR(255) DEFAULT '',
+    is_completed TINYINT(1) NOT NULL DEFAULT 0,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_profile_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS student_profile_documents (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    doc_name VARCHAR(255) NOT NULL,
+    file_name VARCHAR(255) DEFAULT '',
+    file_size VARCHAR(50) DEFAULT '',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_profile_docs_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
