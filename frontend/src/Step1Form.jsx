@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   LayoutDashboard,
   UserCircle,
@@ -12,7 +12,7 @@ import {
   ArrowRight,
   Check,
   ShieldCheck,
-  FileBadge,
+  Pencil,
 } from "lucide-react";
 
 const CURRENT_LEVEL_OPTIONS = ["Bac dai hoc", "Bac thac si", "Bac chuyen tiep", "Bac tien si"];
@@ -150,6 +150,7 @@ function uniqueDocs(list) {
 }
 
 export default function Step1Form({ user, onLogout }) {
+  const API_BASE = "http://localhost:5000/api/student";
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     firstName: "",
@@ -165,13 +166,76 @@ export default function Step1Form({ user, onLogout }) {
   const [uploadedDocs, setUploadedDocs] = useState({
     
   });
+  const [loadingProfile, setLoadingProfile] = useState(true);
+  const [isFinalizing, setIsFinalizing] = useState(false);
+  const [isStep1Locked, setIsStep1Locked] = useState(false);
+  const [allowStep1Edit, setAllowStep1Edit] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const goToStep2 = () => {
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!user?.id) {
+        setLoadingProfile(false);
+        return;
+      }
+      try {
+        const res = await fetch(`${API_BASE}/profile/${user.id}`);
+        const data = await res.json();
+        if (data.profile) {
+          setFormData((prev) => ({
+            ...prev,
+            firstName: data.profile.first_name || "",
+            lastName: data.profile.last_name || "",
+            email: data.profile.email || prev.email,
+            phone: data.profile.phone || "",
+            birthday: data.profile.birthday || "",
+            nationality: data.profile.nationality || "",
+            currentLevel: data.profile.current_level || "",
+            targetLabel: data.profile.target_label || "",
+            address: data.profile.address || "",
+          }));
+          const hasSavedStep1 =
+            !!data.profile.first_name ||
+            !!data.profile.last_name ||
+            !!data.profile.email ||
+            !!data.profile.phone ||
+            !!data.profile.target_label;
+          setIsStep1Locked(hasSavedStep1);
+          setAllowStep1Edit(false);
+          const docsMap = {};
+          (data.documents || []).forEach((d) => {
+            docsMap[d.doc_name] = { name: d.file_name, size: d.file_size };
+          });
+          setUploadedDocs(docsMap);
+
+          if (data.profile.is_completed === 1) {
+            setIsCompleted(true);
+            setCurrentStep(3);
+          } else if ((data.documents || []).length > 0) {
+            setCurrentStep(2);
+          } else {
+            setCurrentStep(1);
+          }
+        }
+      } catch (e) {
+      } finally {
+        setLoadingProfile(false);
+      }
+    };
+    loadProfile();
+  }, [user?.id]);
+
+  const goToStep2 = async () => {
+    if (isStep1Locked && !allowStep1Edit) {
+      setCurrentStep(2);
+      return;
+    }
+
     if (!formData.lastName || !formData.firstName || !formData.email || !formData.phone) {
       alert("Vui long nhap day du Ho, Ten, Email va So dien thoai.");
       return;
@@ -180,7 +244,40 @@ export default function Step1Form({ user, onLogout }) {
       alert("Vui long chon Trinh do bang cap mong muon.");
       return;
     }
-    setCurrentStep(2);
+    if (!user?.id) {
+      alert("Ban can dang nhap lai de luu thong tin vao he thong.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE}/profile`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user.id,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          phone: formData.phone,
+          birthday: formData.birthday,
+          nationality: formData.nationality,
+          currentLevel: formData.currentLevel,
+          targetLabel: formData.targetLabel,
+          address: formData.address,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Khong the luu thong tin ca nhan.");
+      }
+
+      setCurrentStep(2);
+      setIsStep1Locked(true);
+      setAllowStep1Edit(false);
+    } catch (e) {
+      alert(e.message || "Luu thong tin that bai. Vui long thu lai.");
+    }
   };
 
   const handleUpload = (key, event) => {
@@ -200,6 +297,95 @@ export default function Step1Form({ user, onLogout }) {
     const source = TARGET_CHECKLISTS[formData.targetLabel] || [];
     return uniqueDocs(source);
   }, [formData.targetLabel]);
+
+  const isStep2Complete = requiredDocs.length > 0 && requiredDocs.every((doc) => uploadedDocs[doc]);
+  const hasStep1Data =
+    !!formData.lastName &&
+    !!formData.firstName &&
+    !!formData.email &&
+    !!formData.phone &&
+    !!formData.targetLabel;
+
+  const goToStep3 = async () => {
+    if (!isStep2Complete) {
+      alert("Vui long tai day du tai lieu bat buoc.");
+      return;
+    }
+    try {
+      const documents = requiredDocs.map((doc) => ({
+        docName: doc,
+        fileName: uploadedDocs[doc]?.name || "",
+        fileSize: uploadedDocs[doc]?.size || "",
+      }));
+      await fetch(`${API_BASE}/documents`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user?.id, documents }),
+      });
+      await fetch(`${API_BASE}/complete`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user?.id, isCompleted: 1 }),
+      });
+      setCurrentStep(3);
+    } catch (e) {
+      alert("Khong the luu tai lieu. Thu lai.");
+    }
+  };
+
+  const jumpToStep = (targetStep) => {
+    if (targetStep === 1) {
+      setCurrentStep(1);
+      return;
+    }
+    if (targetStep === 2) {
+      if (!hasStep1Data) {
+        alert("Vui long hoan tat thong tin ca nhan truoc.");
+        return;
+      }
+      setCurrentStep(2);
+      return;
+    }
+    if (targetStep === 3) {
+      if (!hasStep1Data) {
+        alert("Vui long hoan tat thong tin ca nhan truoc.");
+        return;
+      }
+      if (!isStep2Complete) {
+        alert("Vui long tai day du tai lieu truoc.");
+        return;
+      }
+      setCurrentStep(3);
+    }
+  };
+
+  const unlockStep1FromReview = () => {
+    setAllowStep1Edit(true);
+    setIsStep1Locked(false);
+    setCurrentStep(1);
+  };
+
+  const handleFinalize = async () => {
+    if (!user?.id) {
+      alert("Khong tim thay thong tin nguoi dung dang nhap.");
+      return;
+    }
+    if (isFinalizing) return;
+    setIsFinalizing(true);
+    try {
+      await fetch(`${API_BASE}/complete`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id, isCompleted: 1 }),
+      });
+      setIsCompleted(true);
+      alert("Ho so da duoc hoan tat va luu vao he thong.");
+    } catch (e) {
+      alert("Khong the hoan tat ho so. Thu lai.");
+    } finally {
+      setIsFinalizing(false);
+    }
+  };
 
   return (
     <div className="global-study-app">
@@ -264,11 +450,16 @@ export default function Step1Form({ user, onLogout }) {
           font-size: 14px;
           line-height: 1.2;
           white-space: nowrap;
+          cursor: pointer;
+          user-select: none;
         }
         .nav-item.active {
           background: #eaf0ff;
           color: #2255d7;
           font-weight: 700;
+        }
+        .nav-item:hover {
+          background: #f3f7ff;
         }
         .logout {
           border: none;
@@ -372,13 +563,22 @@ export default function Step1Form({ user, onLogout }) {
           font-weight: 600;
         }
         .step-item.done .step-circle {
-          background: #2563eb;
-          border-color: #2563eb;
+          background: #22c55e;
+          border-color: #22c55e;
           color: #fff;
         }
         .step-item.done .step-label {
-          color: #2563eb;
+          color: #16a34a;
           font-weight: 600;
+        }
+        .completion-note {
+          margin: 8px 24px 0;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          color: #16a34a;
+          font-weight: 700;
+          font-size: 14px;
         }
         .step-divider.active {
           background: #2563eb;
@@ -527,12 +727,36 @@ export default function Step1Form({ user, onLogout }) {
           padding: 10px 12px;
           min-width: 180px;
         }
+        .file-actions {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
         .file-name {
           font-size: 15px;
         }
         .file-size {
           font-size: 12px;
           color: #6d80a2;
+        }
+        .btn-edit-doc {
+          height: 36px;
+          border: 1px solid #d7e1f0;
+          border-radius: 10px;
+          padding: 0 12px;
+          background: #fff;
+          color: #32517f;
+          cursor: pointer;
+          font-size: 13px;
+          font-weight: 600;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          white-space: nowrap;
+        }
+        .btn-edit-doc:hover {
+          border-color: #2563eb;
+          color: #2563eb;
         }
         .upload-box {
           border: 2px dashed #dbe4f2;
@@ -551,15 +775,20 @@ export default function Step1Form({ user, onLogout }) {
           justify-items: center;
         }
         .upload-btn {
-          height: 38px;
+          height: 42px;
+          min-width: 132px;
           border: none;
-          border-radius: 19px;
-          padding: 0 18px;
+          border-radius: 21px;
+          padding: 0 20px;
           background: #2563eb;
           color: #fff;
           cursor: pointer;
-          font-size: 14px;
+          font-size: 15px;
           font-weight: 600;
+          line-height: 1;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
         }
         .upload-note {
           font-size: 12px;
@@ -611,9 +840,10 @@ export default function Step1Form({ user, onLogout }) {
         </div>
         <nav className="nav-menu">
           <div className="nav-item"><LayoutDashboard size={18} /> Bang dieu khien</div>
-          <div className={`nav-item ${currentStep === 1 ? "active" : ""}`}><UserCircle size={18} /> Ho so cua toi</div>
+          <div className={`nav-item ${currentStep === 1 ? "active" : ""}`} onClick={() => jumpToStep(1)}><UserCircle size={18} /> Ho so cua toi</div>
           <div className="nav-item"><FileText size={18} /> Don ung tuyen</div>
-          <div className={`nav-item ${currentStep === 2 ? "active" : ""}`}><FolderOpen size={18} /> Tai lieu</div>
+          <div className={`nav-item ${currentStep === 2 ? "active" : ""}`} onClick={() => jumpToStep(2)}><FolderOpen size={18} /> Tai lieu</div>
+          <div className={`nav-item ${currentStep === 3 ? "active" : ""}`} onClick={() => jumpToStep(3)}><ShieldCheck size={18} /> Kiem tra lai</div>
           <div className="nav-item"><GraduationCap size={18} /> Truong dai hoc</div>
         </nav>
         <button className="logout" onClick={onLogout}><LogOut size={18} /> Dang xuat</button>
@@ -632,18 +862,27 @@ export default function Step1Form({ user, onLogout }) {
               <span className="step-label">Thong tin ca nhan</span>
             </div>
             <div className={`step-divider ${currentStep > 1 ? "active" : ""}`}></div>
-            <div className={`step-item ${currentStep === 2 ? "active" : ""}`}>
-              <div className="step-circle">2</div>
+            <div className={`step-item ${currentStep === 2 ? "active" : (isStep2Complete && currentStep >= 2) ? "done" : ""}`}>
+              <div className="step-circle">{(isStep2Complete && currentStep >= 2) ? <Check size={16} /> : "2"}</div>
               <span className="step-label">Tai lieu</span>
             </div>
-            <div className="step-divider"></div>
-            <div className="step-item">
-              <div className="step-circle">3</div>
-              <span className="step-label">Kiem tra lai</span>
+            <div className={`step-divider ${currentStep > 2 ? "active" : ""}`}></div>
+            <div className={`step-item ${currentStep === 3 && !isCompleted ? "active" : isCompleted ? "done" : ""}`}>
+              <div className="step-circle">{isCompleted ? <Check size={16} /> : "3"}</div>
+              <span className="step-label">{isCompleted ? "Hoan tat" : "Kiem tra lai"}</span>
             </div>
           </div>
 
-          {currentStep === 1 && (
+          {loadingProfile && (
+            <section className="form-container">
+              <div className="form-title">
+                <h2>Dang tai du lieu...</h2>
+                <p>Vui long cho trong giay lat.</p>
+              </div>
+            </section>
+          )}
+
+          {!loadingProfile && currentStep === 1 && (
             <section className="form-container">
               <div className="form-title">
                 <h2>Thong tin ca nhan</h2>
@@ -653,23 +892,54 @@ export default function Step1Form({ user, onLogout }) {
               <div className="grid-inputs">
                 <div className="input-box">
                   <label>Ho</label>
-                  <input name="lastName" placeholder="Nguyen" value={formData.lastName} onChange={handleChange} />
+                  <input
+                    name="lastName"
+                    placeholder="Nguyen"
+                    value={formData.lastName}
+                    onChange={handleChange}
+                    disabled={isStep1Locked}
+                  />
                 </div>
                 <div className="input-box">
                   <label>Ten</label>
-                  <input name="firstName" placeholder="Van A" value={formData.firstName} onChange={handleChange} />
+                  <input
+                    name="firstName"
+                    placeholder="Van A"
+                    value={formData.firstName}
+                    onChange={handleChange}
+                    disabled={isStep1Locked}
+                  />
                 </div>
                 <div className="input-box">
                   <label>Dia chi Email</label>
-                  <input name="email" type="email" placeholder="nguyen.vana@example.com" value={formData.email} onChange={handleChange} />
+                  <input
+                    name="email"
+                    type="email"
+                    placeholder="nguyen.vana@example.com"
+                    value={formData.email}
+                    onChange={handleChange}
+                    disabled={isStep1Locked}
+                  />
                 </div>
                 <div className="input-box">
                   <label>So dien thoai</label>
-                  <input name="phone" placeholder="+84 912 345 678" value={formData.phone} onChange={handleChange} />
+                  <input
+                    name="phone"
+                    placeholder="+84 912 345 678"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    disabled={isStep1Locked}
+                  />
                 </div>
                 <div className="input-box">
                   <label>Ngay sinh</label>
-                  <input name="birthday" placeholder="mm/dd/yyyy" value={formData.birthday} onChange={handleChange} />
+                  <input
+                    name="birthday"
+                    placeholder="mm/dd/yyyy"
+                    value={formData.birthday}
+                    onChange={handleChange}
+                    disabled={isStep1Locked}
+                  />
                 </div>
                 <div className="input-box">
                   <label>Quoc tich</label>
@@ -678,11 +948,12 @@ export default function Step1Form({ user, onLogout }) {
                     placeholder="Nhap quoc tich"
                     value={formData.nationality}
                     onChange={handleChange}
+                    disabled={isStep1Locked}
                   />
                 </div>
                 <div className="input-box">
                   <label>Trinh do bang cap hien tai</label>
-                  <select name="currentLevel" value={formData.currentLevel} onChange={handleChange}>
+                  <select name="currentLevel" value={formData.currentLevel} onChange={handleChange} disabled={isStep1Locked}>
                     <option value="">Chon trinh do hien tai</option>
                     {CURRENT_LEVEL_OPTIONS.map((opt) => (
                       <option key={opt} value={opt}>{opt}</option>
@@ -692,7 +963,7 @@ export default function Step1Form({ user, onLogout }) {
                 </div>
                 <div className="input-box">
                   <label>Trinh do bang cap mong muon</label>
-                  <select name="targetLabel" value={formData.targetLabel} onChange={handleChange}>
+                  <select name="targetLabel" value={formData.targetLabel} onChange={handleChange} disabled={isStep1Locked}>
                     <option value="">Chon trinh do mong muon</option>
                     {TARGET_LEVEL_OPTIONS.map((opt) => (
                       <option key={opt} value={opt}>{opt}</option>
@@ -707,18 +978,21 @@ export default function Step1Form({ user, onLogout }) {
                     placeholder="So nha, Duong, Phuong/Xa, Quan/Huyen, Tinh/Thanh pho"
                     value={formData.address}
                     onChange={handleChange}
+                    disabled={isStep1Locked}
                   />
                 </div>
               </div>
 
               <div className="form-footer">
                 <button className="btn-prev">Quay lai</button>
-                <button className="btn-next" onClick={goToStep2}>Tiep theo <ArrowRight size={18} /></button>
+                <button className="btn-next" onClick={goToStep2}>
+                  Tiep theo <ArrowRight size={18} />
+                </button>
               </div>
             </section>
           )}
 
-          {currentStep === 2 && (
+          {!loadingProfile && currentStep === 2 && (
             <section className="form-container">
               <div className="form-title">
                 <h2>Tai tai lieu</h2>
@@ -736,9 +1010,16 @@ export default function Step1Form({ user, onLogout }) {
                         <div className="doc-name">Goi y: {fullName}_{docName}</div>
                       </div>
                       {uploaded ? (
-                        <div className="file-pill">
-                          <div className="file-name">{uploaded.name}</div>
-                          <div className="file-size">{uploaded.size}</div>
+                        <div className="file-actions">
+                          <div className="file-pill">
+                            <div className="file-name">{uploaded.name}</div>
+                            <div className="file-size">{uploaded.size}</div>
+                          </div>
+                          <label className="btn-edit-doc">
+                            <Pencil size={14} />
+                            Chinh sua
+                            <input className="upload-hidden" type="file" onChange={(e) => handleUpload(docName, e)} />
+                          </label>
                         </div>
                       ) : (
                         <label className="upload-btn">
@@ -753,7 +1034,58 @@ export default function Step1Form({ user, onLogout }) {
 
               <div className="form-footer">
                 <button className="btn-prev" onClick={() => setCurrentStep(1)}>Quay lai</button>
-                <button className="btn-next">Tiep theo <ArrowRight size={18} /></button>
+                <button className="btn-next" onClick={goToStep3}>Tiep theo <ArrowRight size={18} /></button>
+              </div>
+            </section>
+          )}
+
+          {!loadingProfile && currentStep === 3 && (
+            <section className="form-container">
+              <div className="form-title">
+                <h2>Kiem tra lai</h2>
+                <p>Vui long ra soat toan bo thong tin truoc khi gui ho so.</p>
+              </div>
+              {isCompleted && (
+                <div className="completion-note">
+                  <Check size={16} />
+                  Hoan tat
+                </div>
+              )}
+
+              <div className="upload-list">
+                <div className="doc-card done">
+                  <div className="doc-left">
+                    <div className="upload-title">Thong tin ca nhan</div>
+                    <div className="upload-sub">Ho va ten: {fullName}</div>
+                    <div className="upload-sub">Email: {formData.email}</div>
+                    <div className="upload-sub">So dien thoai: {formData.phone}</div>
+                    <div className="upload-sub">Ngay sinh: {formData.birthday}</div>
+                    <div className="upload-sub">Quoc tich: {formData.nationality}</div>
+                    <div className="upload-sub">Dia chi: {formData.address}</div>
+                    <div className="upload-sub">Bang cap hien tai: {formData.currentLevel}</div>
+                    <div className="upload-sub">Bang cap mong muon: {formData.targetLabel}</div>
+                  </div>
+                  <button className="btn-prev" onClick={unlockStep1FromReview}><Pencil size={14} /> Chinh sua</button>
+                </div>
+
+                <div className="doc-card done">
+                  <div className="doc-left">
+                    <div className="upload-title">Danh sach tai lieu</div>
+                    {requiredDocs.map((doc) => (
+                      <div className="upload-sub" key={doc}>
+                        {doc}: {uploadedDocs[doc]?.name || "Chua co file"}
+                      </div>
+                    ))}
+                  </div>
+                  <button className="btn-prev" onClick={() => setCurrentStep(2)}><Pencil size={14} /> Chinh sua</button>
+                </div>
+              </div>
+
+              <div className="form-footer">
+                <button className="btn-prev" onClick={() => setCurrentStep(2)}>Quay lai</button>
+                <button className="btn-next" onClick={handleFinalize} disabled={isFinalizing}>
+                  {isFinalizing ? "Dang xu ly..." : "Ho so da hoan tat"}
+                </button>
               </div>
             </section>
           )}

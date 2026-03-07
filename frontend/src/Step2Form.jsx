@@ -121,7 +121,7 @@ export default function Step2Form({ user, profile, onBack, onLogout }) {
         .doc-card.done { border-style:solid; border-color:#e1e8f4; background:#f9fbff; }
         .doc-left { display:grid; gap:6px; }
         .doc-title { font-size:18px; font-weight:700; } .doc-sub { color:#6c80a2; font-size:13px; } .doc-name { font-size:12px; color:#6d80a2; }
-        .upload-btn { height:38px; border:none; border-radius:19px; padding:0 18px; background:#2563eb; color:#fff; cursor:pointer; font-size:14px; font-weight:600; display:inline-flex; align-items:center; }
+        .upload-btn { height:42px; min-width:132px; border:none; border-radius:21px; padding:0 20px; background:#2563eb; color:#fff; cursor:pointer; font-size:15px; font-weight:600; line-height:1; display:inline-flex; align-items:center; justify-content:center; }
         .upload-hidden { display:none; }
         .file-pill { border:1px solid #dfe6f1; border-radius:12px; background:#fff; padding:10px 12px; min-width:190px; }
         .file-name { font-size:15px; } .file-size { font-size:12px; color:#6d80a2; }

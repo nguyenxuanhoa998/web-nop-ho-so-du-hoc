@@ -1,25 +1,7 @@
 CREATE DATABASE IF NOT EXISTS du_hoc_db;
 USE du_hoc_db;
-CREATE TABLE IF NOT EXISTS students (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    full_name VARCHAR(255) NOT NULL,
-    phone VARCHAR(20) NOT NULL,
-    email VARCHAR(255) NOT NULL,
-    level VARCHAR(100),
-    status VARCHAR(100),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT unique_student UNIQUE (full_name, phone, email)
-);
-
-CREATE TABLE IF NOT EXISTS student_documents (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    student_id INT NOT NULL,
-    doc_name VARCHAR(255) NOT NULL,
-    file_path TEXT DEFAULT NULL,       
-    is_submitted TINYINT(1) DEFAULT 0, 
-    step INT DEFAULT 1,
-    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
-);
+DROP TABLE IF EXISTS student_documents;
+DROP TABLE IF EXISTS students;
 
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -29,4 +11,33 @@ CREATE TABLE IF NOT EXISTS users (
     password_salt VARCHAR(64) NOT NULL,
     password_hash VARCHAR(128) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS student_profiles (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL UNIQUE,
+    first_name VARCHAR(100) DEFAULT '',
+    last_name VARCHAR(100) DEFAULT '',
+    email VARCHAR(255) DEFAULT '',
+    phone VARCHAR(30) DEFAULT '',
+    birthday VARCHAR(50) DEFAULT '',
+    nationality VARCHAR(100) DEFAULT '',
+    current_level VARCHAR(150) DEFAULT '',
+    target_label VARCHAR(255) DEFAULT '',
+    address VARCHAR(255) DEFAULT '',
+    is_completed TINYINT(1) NOT NULL DEFAULT 0,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_profile_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS student_profile_documents (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    doc_name VARCHAR(255) NOT NULL,
+    file_name VARCHAR(255) DEFAULT '',
+    file_size VARCHAR(50) DEFAULT '',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_profile_docs_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );

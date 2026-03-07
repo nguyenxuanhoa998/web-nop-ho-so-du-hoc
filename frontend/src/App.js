@@ -1,14 +1,24 @@
-import React from 'react';
-import Step1Form from './Step1Form';
+import { useState } from "react";
+import LoginPage from "./pages/LoginPage";
+import Step1Form from "./Step1Form";
+import AdminPortalPage from "./pages/AdminPortalPage";
 
 function App() {
-  console.log(123);
-  
-  return (
-    <div className="App">
-      <Step1Form />
-    </div>
-  );
+  const [currentUser, setCurrentUser] = useState(null);
+
+  if (!currentUser) {
+    return <LoginPage onLoginSuccess={setCurrentUser} />;
+  }
+
+  if (currentUser.role === "student") {
+    return <Step1Form user={currentUser} onLogout={() => setCurrentUser(null)} />;
+  }
+
+  if (currentUser.role === "admin") {
+    return <AdminPortalPage user={currentUser} onLogout={() => setCurrentUser(null)} />;
+  }
+
+  return <LoginPage onLoginSuccess={setCurrentUser} />;
 }
 
 export default App;
