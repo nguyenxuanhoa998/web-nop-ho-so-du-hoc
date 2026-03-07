@@ -1,0 +1,271 @@
+.portal-root {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    background: #f3f5f9;
+    font-family: "Segoe UI", Tahoma, sans-serif;
+    color: #1c2434;
+}
+
+.portal-sidebar {
+    background: #fff;
+    border-right: 1px solid #e3e8f1;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.brand {
+    font-size: 28px;
+    font-weight: 800;
+    color: #2563eb;
+    margin-bottom: 10px;
+}
+
+.user-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    background: #f2f5fb;
+    border-radius: 12px;
+}
+
+.avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #dbe6ff;
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+}
+
+.user-name {
+    font-weight: 700;
+}
+
+.user-role {
+    font-size: 12px;
+    color: #64748b;
+}
+
+.menu-item {
+    padding: 10px 12px;
+    border-radius: 10px;
+    color: #4a5c79;
+}
+
+.menu-item.active {
+    background: #e8efff;
+    color: #2555d6;
+    font-weight: 700;
+}
+
+.logout-btn {
+    margin-top: auto;
+    border: 1px solid #d4def2;
+    background: #fff;
+    border-radius: 10px;
+    padding: 10px;
+    cursor: pointer;
+}
+
+.portal-main {
+    padding: 12px 20px 20px;
+}
+
+.topbar {
+    font-size: 28px;
+    font-weight: 800;
+    margin-bottom: 16px;
+}
+
+.stepper {
+    display: flex;
+    align-items: center;
+    background: #fff;
+    border: 1px solid #e1e7f0;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 16px;
+}
+
+.step-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.step-label {
+    font-size: 13px;
+    color: #58709c;
+    white-space: nowrap;
+}
+
+.step {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #eef1f8;
+    color: #7b8799;
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+}
+
+.step.on {
+    background: #2f6cf0;
+    color: #fff;
+}
+
+.line {
+    flex: 1;
+    height: 3px;
+    background: #e5eaf4;
+}
+
+.line.on {
+    background: #2f6cf0;
+}
+
+.card {
+    background: #fff;
+    border: 1px solid #e1e7f0;
+    border-radius: 16px;
+    padding: 22px;
+}
+
+.card h2 {
+    font-size: 34px;
+    margin: 0 0 4px;
+}
+
+.card p {
+    color: #57709d;
+    margin: 0 0 16px;
+}
+
+.grid2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.card input,
+.card select {
+    height: 44px;
+    border: 1px solid #dbe2ee;
+    border-radius: 10px;
+    padding: 0 12px;
+    background: #f7f9fd;
+    color: #1f2b3d;
+}
+
+.card input.full {
+    width: 100%;
+    margin-top: 12px;
+}
+
+.actions {
+    margin-top: 16px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.secondary,
+.primary {
+    min-width: 120px;
+    border-radius: 10px;
+    height: 42px;
+    border: none;
+    cursor: pointer;
+}
+
+.secondary {
+    background: #edf1f8;
+    color: #384a6d;
+}
+
+.primary {
+    background: #2f6cf0;
+    color: #fff;
+}
+
+.primary:disabled {
+    background: #9cb7f4;
+    cursor: not-allowed;
+}
+
+.docs {
+    display: grid;
+    gap: 10px;
+}
+
+.doc-item {
+    border: 1px dashed #cfd8e6;
+    border-radius: 12px;
+    padding: 14px;
+}
+
+.doc-title {
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.upload {
+    display: inline-block;
+    background: #2f6cf0;
+    color: #fff;
+    padding: 8px 14px;
+    border-radius: 9px;
+    cursor: pointer;
+}
+
+.upload input {
+    display: none;
+}
+
+.uploaded {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #edf4ff;
+    border-radius: 10px;
+    padding: 8px 10px;
+}
+
+.uploaded button {
+    border: none;
+    background: transparent;
+    color: #c43838;
+    cursor: pointer;
+}
+
+.review,
+.review-files {
+    display: grid;
+    gap: 8px;
+    background: #f8faff;
+    border: 1px solid #e2e9f5;
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 10px;
+}
+
+@media (max-width: 900px) {
+    .portal-root {
+        grid-template-columns: 1fr;
+    }
+
+    .portal-sidebar {
+        border-right: none;
+        border-bottom: 1px solid #e3e8f1;
+    }
+
+    .grid2 {
+        grid-template-columns: 1fr;
+    }
+}

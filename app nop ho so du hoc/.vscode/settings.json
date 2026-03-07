@@ -10,7 +10,7 @@
             "server": "localhost",
             "port": 3306,
             "driver": "MySQL",
-            "name": "ho so du hoc",
+            "name": "Duhoc_DB",
             "database": "du_hoc_db",
             "username": "root",
             "password": ""

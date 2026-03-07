@@ -1,0 +1,4 @@
+node_modules/
+backend/node_modules/
+student-management/node_modules/
+.env
