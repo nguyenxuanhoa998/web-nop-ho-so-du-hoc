@@ -26,7 +26,7 @@ export default function LoginPage({ onLoginSuccess }) {
         resetFeedback();
 
         if (!email || !password || (mode === "register" && !fullName)) {
-            setError("Vui long nhap day du thong tin.");
+            setError("Vui lòng nhập đầy đủ thông tin.");
             return;
         }
 
@@ -46,11 +46,11 @@ export default function LoginPage({ onLoginSuccess }) {
 
             const data = await response.json();
             if (!response.ok) {
-                setError(data.message || "Thao tac that bai.");
+                setError(data.message || "Thao tác thất bại.");
                 return;
             }
 
-            setMessage(data.message || "Thao tac thanh cong.");
+            setMessage(data.message || "Thao tác thành công.");
             if (mode === "register") {
                 setMode("login");
                 setPassword("");
@@ -58,7 +58,7 @@ export default function LoginPage({ onLoginSuccess }) {
                 onLoginSuccess(data.user);
             }
         } catch (apiErr) {
-            setError("Khong the ket noi server. Vui long kiem tra backend.");
+            setError("Không thể kết nối server. Vui lòng kiểm tra backend.");
         } finally {
             setLoading(false);
         }
